@@ -18,7 +18,17 @@ class Board
       print "#{i} "
       values = []
       row.each do |tile|
-        values << (tile.value == 0 ? ' ' : tile.value)
+        case tile
+        # when tile.value == 0
+        #   values << ' '
+        when tile.flag
+          values << 'f'
+        when tile.value == :B
+          values << 'B'
+        else
+          values << (tile.value == 0 ? ' ' : tile.value)
+        end
+        # values << (tile.value == 0 ? ' ' : tile.value)
       end
       puts values.join(' ')
     end
@@ -39,12 +49,27 @@ class Board
       tile = self[rand_pos]
       if tile.value != :B
         tile.value = :B
-        # update_neighbors(rand_pos)
+        update_neighbors(rand_pos)
         bomb_count -= 1
       end
     end
   end
 
+  def update_neighbors(pos)
+    row, col = pos
+    (-1..1).each do |row_offset|
+      (-1..1).each do |col_offset|
+        n_row = row + row_offset
+        n_col = col + col_offset
+        next if out_of_range?(n_row) || out_of_range?(n_col)
+        n_pos = [n_row, n_col]
+        tile = self[n_pos]
+  # ÷      byebug
+        next if tile.value == :B
+        tile.value += 1
+      end
+    end
+  end
 
   def [](pos)
     row, col = pos
@@ -54,6 +79,10 @@ class Board
   def []=(pos, val)
     row, col = pos
     @board[row][col] = val
+  end
+
+  def out_of_range?(num)
+    num >= size || num < 0
   end
 
 end
