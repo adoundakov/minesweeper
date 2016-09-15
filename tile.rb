@@ -1,3 +1,4 @@
+require 'byebug'
 require 'colorize'
 
 class Tile
@@ -20,6 +21,10 @@ class Tile
 
   def reveal
     @revealed = true
+  end
+
+  def revealed?
+    @revealed
   end
 
 end

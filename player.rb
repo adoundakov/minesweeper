@@ -1,7 +1,18 @@
 class Player
+  attr_reader :name
   def initialize(name)
     @name = name
   end
+
+  # def get_difficulty
+  #   puts "Welcome, #{player.name}"
+  #   puts "How big of a board?"
+  #   size = gets.chomp.to_i
+  #   puts "How many bombs?"
+  #   bomb_count = gets.chomp.to_i
+  #
+  #   [size, bomb_count]
+  # end
 
   def prompt
     puts "Please enter an operation and position: (r 3,4)"
@@ -10,7 +21,7 @@ class Player
 
   def get_move
     prompt
-    p process_input(get_input)
+    process_input(get_input)
   end
 
   def get_input

@@ -2,12 +2,13 @@ require_relative 'tile'
 require 'byebug'
 
 class Board
-  attr_reader :size, :bomb
+  attr_reader :size, :boom
 
   def initialize(size = 9, bomb_count = 10)
     @size = size
     @board = Array.new(size) { Array.new(size) }
     @bomb_count = bomb_count
+    @boom = false
     populate_board
     place_bombs(bomb_count)
   end
@@ -18,17 +19,33 @@ class Board
       print "#{i} "
       values = []
       row.each do |tile|
+        # case tile
+        if tile.flag
+          values << 'F'
+        elsif tile.revealed?
+          values << tile.value
+        else
+          values << '*'
+        end
+      end
+      puts values.join(' ')
+    end
+  end
+
+  def render_full
+    puts "  #{(0...size).to_a.join(" ")}"
+    @board.each_with_index do |row, i|
+      print "#{i} "
+      values = []
+      row.each do |tile|
         case tile
-        # when tile.value == 0
-        #   values << ' '
         when tile.flag
           values << 'f'
-        when tile.value == :B
+        when tile.is_bomb?
           values << 'B'
         else
           values << (tile.value == 0 ? ' ' : tile.value)
         end
-        # values << (tile.value == 0 ? ' ' : tile.value)
       end
       puts values.join(' ')
     end
@@ -65,10 +82,20 @@ class Board
         n_pos = [n_row, n_col]
         tile = self[n_pos]
   # ÷      byebug
-        next if tile.value == :B
+        next if tile.is_bomb?
         tile.value += 1
       end
     end
+  end
+
+  def flag(pos)
+    self[pos].toggle_flag
+  end
+
+  def reveal(pos)
+    tile = self[pos]
+    boom if tile.is_bomb?
+    tile.reveal
   end
 
   def [](pos)
@@ -83,6 +110,21 @@ class Board
 
   def out_of_range?(num)
     num >= size || num < 0
+  end
+
+  def over?
+    @board.each do |row|
+      row.each do |tile|
+        if tile.revealed? == false
+          return false unless tile.is_bomb?
+        end
+      end
+    end
+    true
+  end
+
+  def boom!
+    @boom = true
   end
 
 end
