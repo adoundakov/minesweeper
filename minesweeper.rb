@@ -44,9 +44,7 @@ class Minesweeper
       puts "Invalid Move"
       take_turn
     end
-
   end
-
 end
 
 if __FILE__ == $0
