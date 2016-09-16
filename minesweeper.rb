@@ -13,7 +13,7 @@ class Minesweeper
       @board.render
       take_turn
     end
-    @board.render
+    @board.render_full
     puts "Game Over!"
     puts "BOOM!" if boom?
     puts "You Win!" if over?

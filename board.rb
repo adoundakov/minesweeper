@@ -1,3 +1,4 @@
+require 'colorize'
 require_relative 'tile'
 require 'byebug'
 
@@ -14,16 +15,17 @@ class Board
   end
 
   def render
-    puts "  #{(0...size).to_a.join(" ")}"
+    puts "  #{(0...size).to_a.join(" ")}".colorize(:white)
     @board.each_with_index do |row, i|
-      print "#{i} "
+      print "#{i} ".colorize(:white)
       values = []
       row.each do |tile|
-        # case tile
         if tile.flag
-          values << 'F'
+          values << 'F'.colorize(:red)
         elsif tile.revealed?
           values << tile.value
+        elsif tile.is_0? && tile.revealed?
+          values << ' '
         else
           values << '*'
         end
@@ -38,14 +40,7 @@ class Board
       print "#{i} "
       values = []
       row.each do |tile|
-        case tile
-        when tile.flag
-          values << 'f'
-        when tile.is_bomb?
-          values << 'B'
-        else
-          values << (tile.value == 0 ? ' ' : tile.value)
-        end
+        values << (tile.is_0? ? ' ' : tile.value)
       end
       puts values.join(' ')
     end
@@ -73,20 +68,27 @@ class Board
   end
 
   def update_neighbors(pos)
-    row, col = pos
-    (-1..1).each do |row_offset|
-      (-1..1).each do |col_offset|
-        n_row = row + row_offset
-        n_col = col + col_offset
-        next if out_of_range?(n_row) || out_of_range?(n_col)
-        n_pos = [n_row, n_col]
-        tile = self[n_pos]
-  # ÷      byebug
-        next if tile.is_bomb?
-        tile.value += 1
-      end
+    neighbors(pos).each do |neighbor|
+      next if neighbor.is_bomb?
+      neighbor.value += 1
     end
   end
+
+  def reveal_neighbors(pos)
+    neighbors = neighbors(pos).sort { |a, b| b.value <=> a.value }
+    neighbors.reject! { |tile| tile.revealed? }
+# p neighbors
+    neighbors.each do |tile|
+      if !tile.is_0?
+        tile.reveal unless tile.is_bomb? || tile.flag
+      elsif tile.is_0?
+        tile.reveal
+        reveal_neighbors(tile.pos)
+      end
+    end
+
+  end
+
 
   def flag(pos)
     self[pos].toggle_flag
@@ -94,8 +96,27 @@ class Board
 
   def reveal(pos)
     tile = self[pos]
-    boom if tile.is_bomb?
-    tile.reveal
+    if tile.flag
+      puts "Cannot reveal a flagged tile"
+      puts "Please unflag the tile first"
+    else
+      boom! if tile.is_bomb?
+      reveal_neighbors(pos) if tile.is_0?
+      tile.reveal
+    end
+  end
+
+  def neighbors(pos)
+    neighbors = []
+    (-1..1).each do |row_offset|
+      (-1..1).each do |col_offset|
+        n_row , n_col = (pos[0] + row_offset), (pos[1] + col_offset)
+        next if out_of_range?(n_row) || out_of_range?(n_col)
+        tile = self[[n_row, n_col]]
+        neighbors << tile
+      end
+    end
+    neighbors
   end
 
   def [](pos)
@@ -128,3 +149,19 @@ class Board
   end
 
 end
+
+# def reveal_neighbors(pos)
+#   row , col = pos
+#
+#   Board.neighbor_offsets.each do |offset|
+#     offset_row, offset_col = offset
+#     n_row, n_col = (row + offset_row), (col + offset_col)
+#     next if out_of_range?(n_row) || out_of_range?(n_col)
+#     n_pos = [n_row, n_col]
+#     n_tile = self[n_pos]
+#     n_tile.reveal #unless n_tile.is_bomb?
+#     if n_tile.is_0? && !n_tile.revealed?
+#       reveal_neighbors(n_pos)
+#     end
+#   end
+# end
