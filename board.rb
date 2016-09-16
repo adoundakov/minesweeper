@@ -1,15 +1,17 @@
 require 'colorize'
 require_relative 'tile'
+require 'byebug'
 
 class Board
   attr_reader :size, :boom
 
   def initialize(size = 9, bomb_count = 10)
     @size = size
-    @board = Array.new(size) { Array.new(size) }
+    @board = Array.new(size) do |row|
+                Array.new(size) {|col| Tile.new([row, col])}
+              end
     @bomb_count = bomb_count
     @boom = false
-    populate_board
     place_bombs(bomb_count)
   end
 
@@ -21,10 +23,10 @@ class Board
       row.each do |tile|
         if tile.flag
           values << 'F'.colorize(:red)
-        elsif tile.revealed?
-          values << tile.value
         elsif tile.is_0? && tile.revealed?
           values << ' '
+        elsif tile.revealed?
+          values << add_color(tile.value)
         else
           values << '*'.colorize(:blue)
         end
@@ -42,14 +44,6 @@ class Board
         values << (tile.is_0? ? ' ' : tile.value)
       end
       puts values.join(' ')
-    end
-  end
-
-  def populate_board
-    @size.times do |row|
-      @size.times do |col|
-        self[[row,col]] = Tile.new([row, col])
-      end
     end
   end
 
@@ -120,9 +114,20 @@ class Board
     @board[row][col]
   end
 
-  def []=(pos, val)
-    row, col = pos
-    @board[row][col] = val
+  def add_color(value)
+    colors = {
+      1 => '1'.colorize(:blue),
+      2 => '2'.colorize(:green),
+      3 => '3'.colorize(:light_magenta),
+      4 => '4'.colorize(:light_green),
+      5 => '5'.colorize(:yellow),
+      6 => '6'.colorize(:magenta),
+      7 => '7'.colorize(:light_yellow),
+      8 => '8'.colorize(:white),
+      9 => '9'.colorize(:cyan)
+    }
+
+    colors[value]
   end
 
   def out_of_range?(num)
