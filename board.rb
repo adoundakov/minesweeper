@@ -28,7 +28,7 @@ class Board
         elsif tile.revealed?
           values << add_color(tile.value)
         else
-          values << '*'.colorize(:blue)
+          values << '*'.colorize(:white)
         end
       end
       puts values.join(' ')
